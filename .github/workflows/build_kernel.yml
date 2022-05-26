@@ -73,6 +73,6 @@ jobs:
         export ARCH=arm64
         export SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-android-
-        export PATH=../Toolchain/bin
+        export PATH=../toolchain/bin
         make ./arch/arm64/configs/${{ github.events.inputs.DEFCONFIG_NAME }}
         make
