@@ -66,7 +66,7 @@ jobs:
         cd ${{ steps.pwd.outputs.pwd }}
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git Toolchain
         git clone ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }} ./kernel
-        
+
     - name: Building Kernel
       run: |
         cd Kernel
@@ -76,15 +76,3 @@ jobs:
         export PATH=../Toolchain/bin
         make ./arch/arm64/configs/${{ github.events.inputs.DEFCONFIG_NAME }}
         make
-        
-    #- name: Upload to Release
-      #uses: softprops/action-gh-release@v1
-      #with:
-        #files: |
-          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.zip
-          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/boot.img
-        #name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
-        #tag_name: ${{ github.run_id }}
-        #body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
-      #env:
-        #GITHUB_TOKEN: ${{ secrets.work }}
