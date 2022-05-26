@@ -1,0 +1,90 @@
+name: Make Xiaomi Pad 5 Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      LIBRARY_URL:
+        description: 'Kernel URL'
+        required: true
+        default: 'https://github.com/bm0x/android_kernel_xiaomi_sm8150'
+      LIBRARY_BRANCH:
+        description: 'Kernel Branch'
+        required: true
+        default: 'lineage-18.1'
+      DEFCONFIG_NAME:
+        description: 'Defconfig'
+        required: true
+        default: 'nabu_defconfig'
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    if: github.event.repository.owner.id == github.event.sender.id
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Maximize build disk space
+      uses: easimon/maximize-build-space@v5
+      with:
+        root-reserve-mb: 1024
+        swap-size-mb: 6144
+        remove-dotnet: 'true'
+        temp-reserve-mb: 1024
+        remove-android: 'true'
+        remove-haskell: 'true'
+
+    - name: Check Out
+      uses: actions/checkout@main
+
+    - name: Prepare the environment
+      run: |
+        docker rmi `docker images -q`
+        sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/sudo apt/sources.list.d
+        sudo apt -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+        sudo apt -y autoremove --purge
+        sudo apt -y autoclean
+        sudo apt clean
+        sudo apt update
+        sudo apt -y install build-essential cpio liblz4-dev zipalign p7zip fakeroot gcc make bc curl git zip
+      
+    - name: Set variables
+      run: |
+        echo "::set-output name=date::$(date +%F)"
+      id: var
+      
+    - name: Setting GitHub User Control
+      run: |
+        echo "::set-output name=pwd::$(pwd)"
+        git config --global user.name "Rafael Méndez"
+        git config --global user.email "bm0x@nxt.org"
+      id: pwd
+      
+    - name: Clone device
+      run: |
+        cd ${{ steps.pwd.outputs.pwd }}
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git Toolchain
+        git clone ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }} ./kernel
+        
+    - name: Building Kernel
+      run: |
+        cd Kernel
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-android-
+        export PATH=../Toolchain/bin
+        make ./arch/arm64/configs/${{ github.events.inputs.DEFCONFIG_NAME }}
+        make
+        
+    #- name: Upload to Release
+      #uses: softprops/action-gh-release@v1
+      #with:
+        #files: |
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.zip
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/boot.img
+        #name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
+        #tag_name: ${{ github.run_id }}
+        #body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
+      #env:
+        #GITHUB_TOKEN: ${{ secrets.work }}
