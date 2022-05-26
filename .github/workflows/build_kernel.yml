@@ -64,12 +64,12 @@ jobs:
     - name: Clone device
       run: |
         cd ${{ steps.pwd.outputs.pwd }}
-        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git Toolchain
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git ./toolchain
         git clone ${{ github.event.inputs.LIBRARY_URL }} -b ${{ github.event.inputs.LIBRARY_BRANCH }} ./kernel
 
     - name: Building Kernel
       run: |
-        cd Kernel
+        cd kernel
         export ARCH=arm64
         export SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-android-
